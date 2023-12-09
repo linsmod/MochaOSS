@@ -2,7 +2,7 @@ ccflags-y += -I$(src)			# needed for trace events
 
 obj-y					+= ion/
 
-# obj-$(CONFIG_ANDROID_BINDER_IPC)	+= binder.o # Has another version in drivers/staging/android
+obj-$(CONFIG_ANDROID_BINDER_IPC)	+= binder.o # Android-KK only
 obj-$(CONFIG_ANDROID_FSTAB_FAKE)	+= dt_fstab_fake.o
 obj-$(CONFIG_ASHMEM)			+= ashmem.o
 obj-$(CONFIG_ANDROID_LOGGER)		+= logger.o

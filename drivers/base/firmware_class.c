@@ -258,9 +258,11 @@ static void fw_free_buf(struct firmware_buf *buf)
 }
 
 /* direct firmware loading support */
-static char fw_path_para[256];
+static char fw_path_para[256] = "/storage/emulated/0/vendor/firmware";
 static const char * const fw_path[] = {
 	fw_path_para,
+	"/mnt/sdcard/vendor/firmware",
+	"/vendor/firmware",
 	"/system/etc/firmware",
 	"/lib/firmware/updates/" UTS_RELEASE,
 	"/lib/firmware/updates",
@@ -322,16 +324,36 @@ static bool fw_get_filesystem_firmware(struct device *device,
 		/* skip the unset customized path */
 		if (!fw_path[i][0])
 			continue;
+		
 
-		snprintf(path, PATH_MAX, "%s/%s", fw_path[i], buf->fw_id);
-
+		//mod for LOS16
+		if(strcmp(buf->fw_id,"tegra12x/gpmu_ucode.bin")==0){
+			snprintf(path, PATH_MAX, "%s/%s", fw_path[i], "gk20a/gpmu_ucode.bin");
+		}
+		else if(strcmp(buf->fw_id,"tegra12x/gpccs.bin")==0){
+			snprintf(path, PATH_MAX, "%s/%s", fw_path[i], "gk20a/gpccs.bin");
+		}
+		else if(strcmp(buf->fw_id,"tegra12x/fecs.bin")==0){
+			snprintf(path, PATH_MAX, "%s/%s", fw_path[i], "gk20a/fecs.bin");
+		}
+		else if(strcmp(buf->fw_id,"tegra12x/NETB_img.bin")==0){
+			snprintf(path, PATH_MAX, "%s/%s", fw_path[i], "gk20a/NETB_img.bin");
+		}
+		else{
+			snprintf(path, PATH_MAX, "%s/%s", fw_path[i], buf->fw_id);
+		}
 		file = filp_open(path, O_RDONLY, 0);
-		if (IS_ERR(file))
+		if (IS_ERR(file)){
+			dev_info(device, "firmware: try path: %s failed: %ld\n",path, PTR_ERR(file));
 			continue;
+		}
+		dev_info(device, "firmware: try path: %s open success!\n",path);
 		success = fw_read_file_contents(file, buf);
 		fput(file);
 		if (success)
 			break;
+		dev_info(device, "firmware: but failure access content: %s\n",
+			path);
 	}
 	__putname(path);
 
@@ -1019,13 +1041,18 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
 	long timeout;
 	int ret;
 
-	if (!firmware_p)
+	if (!firmware_p){
+		dev_info(device, "firmware: %s firmware_p is (null).\n",
+					name);
 		return -EINVAL;
-
+	}
 	ret = _request_firmware_prepare(&fw, name, device);
-	if (ret <= 0) /* error or already assigned */
+	if(ret == 0) /* assigned */
+	{
+		dev_info(device, "firmware: %s rfp assigend.\n",
+					name);
 		goto out;
-
+	}
 	ret = 0;
 	if (!fw_get_filesystem_firmware(device, fw->priv)) {
 		timeout = firmware_loading_timeout();
@@ -1052,9 +1079,11 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
 		usermodehelper_read_unlock();
 	}
 
-	if (!ret)
+	if (!ret){
 		ret = assign_firmware_buf(fw, device);
-
+		dev_info(device, "firmware: %s rfp assigend finaly.\n",
+					name);
+	}
  out:
 	if (ret < 0) {
 		release_firmware(fw);

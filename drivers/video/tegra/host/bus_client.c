@@ -44,6 +44,7 @@
 #include "bus_client.h"
 #include "dev.h"
 #include "class_ids.h"
+#include "linux/device.h"
 #include "nvhost_as.h"
 #include "nvhost_memmgr.h"
 #include "chip_support.h"
@@ -1489,7 +1490,7 @@ nvhost_client_request_firmware(struct platform_device *dev, const char *fw_name)
 		sprintf(fw_path, "%s/%s", op->soc_name, fw_name);
 		fw_name = fw_path;
 	}
-
+	dev_info(&dev->dev, "tegra request_firmware: %s\n",fw_name);
 	err = request_firmware(&fw, fw_name, &dev->dev);
 	kfree(fw_path);
 	if (err) {
