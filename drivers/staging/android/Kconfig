@@ -117,6 +117,14 @@ config SW_SYNC_USER
 	  *WARNING* improper use of this can result in deadlocking kernel
 	  drivers from userspace.
 
+config ANDROID_FSTAB_FAKE
+	bool "Enable android fstab driver for fake DT fstab"
+	depends on PROC_FS
+	help
+	  This is intended to allow early mounting partitions
+	  on devices without DT, or where DT can't be modified.
+
+
 source "drivers/staging/android/ion/Kconfig"
 
 endif # if ANDROID

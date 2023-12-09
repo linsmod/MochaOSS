@@ -27,3 +27,4 @@ build.log
 .**.dtsi
 .cache
 compile_commands.json
+bootlogs/**
